@@ -23,5 +23,20 @@ module round_robin_arbiter_with_2_requests
     // requests -> 01 00 10 11 11 00 11 00 11 11
     // grants   -> 01 00 10 01 10 00 01 00 10 01
 
+logic next;
+
+always_ff @(posedge clk) begin
+  if (rst) begin
+    next <= '0;
+  end
+  else begin
+    if (grants != '0) begin
+      next <= ~grants[1];
+    end
+  end
+end
+
+assign grants[0] = requests[0] & (~next | ~(requests[0] & requests[1]));
+assign grants[1] = requests[1] & ( next | ~(requests[0] & requests[1]));
 
 endmodule
