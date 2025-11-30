@@ -85,6 +85,50 @@ module sort_three_floats (
     //
     // The FLEN parameter is defined in the "import/preprocessed/cvw/config-shared.vh" file
     // and usually equal to the bit width of the double-precision floating-point number, FP64, 64 bits.
+    logic f0_leq_f1, f1_leq_f2;
+    logic err1, err2, err3;
+    // temps for preventing loopbacks in comb logic
+    logic [0:1][FLEN-1:0] presorted; // temporary result after 1st comp
+    logic [FLEN-1:0] presorted_1;   // temporary result after 2 comp
+
+
+    f_less_or_equal i_floe_0
+    (
+        .a   ( unsorted [0] ),
+        .b   ( unsorted [1] ),
+        .res ( f0_leq_f1    ),
+        .err ( err1         )
+    );
+
+    f_less_or_equal i_floe_1
+    (
+        .a   ( presorted [1] ),
+        .b   ( unsorted  [2] ),
+        .res ( f1_leq_f2    ),
+        .err ( err2         )
+    );
+
+    f_less_or_equal i_floe_2
+    (
+        .a   ( presorted [0] ),
+        .b   ( presorted_1 ),
+        .res ( f0_leq_f1_s  ),
+        .err ( err3         )
+    );
+
+
+    always_comb begin
+      if (!f0_leq_f1) { presorted[0], presorted[1] } = { unsorted[1], unsorted[0] };
+      else presorted[0:1] = unsorted[0:1];
+
+      if (!f1_leq_f2) { presorted_1, sorted[2] } = { unsorted[2], presorted[1] };
+      else { presorted_1, sorted[2] } = { presorted[1], unsorted[2] };
+
+      if (!f0_leq_f1_s) {sorted[0], sorted[1]} = { presorted_1, presorted[0] };
+      else {sorted[0], sorted[1]} = { presorted[0], presorted_1 };
+    end
+
+    assign err = err1 | err2 | err3;
 
 
 endmodule

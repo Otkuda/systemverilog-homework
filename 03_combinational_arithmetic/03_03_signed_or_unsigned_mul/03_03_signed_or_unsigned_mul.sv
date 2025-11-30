@@ -53,4 +53,6 @@ module signed_or_unsigned_mul
   output [2 * n - 1:0] res
 );
 
+assign res = signed_mul ? {{n{a[n-1]}}, a} * {{n{b[n-1]}}, b}: a * b;
+
 endmodule
